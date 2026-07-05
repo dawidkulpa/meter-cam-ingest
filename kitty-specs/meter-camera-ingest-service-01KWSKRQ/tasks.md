@@ -18,7 +18,7 @@
 | T008 | Implement standard-library HTTP handler for `/health` and `/capture/water` | WP02 | No |
 | T009 | Run compileall and full automated tests | WP02 | No |
 | T010 | Add deployment samples for systemd and env configuration | WP03 | Yes |
-| T011 | Add README with boundaries, API examples, storage layout, and Hermes handoff | WP03 | Yes |
+| T011 | Add professional public README with boundaries, API examples, storage layout, and downstream handoff | WP03 | Yes |
 | T012 | Run a local background-server curl smoke test and record verified commands in README | WP03 | No |
 | T013 | Inspect git status for secrets and commit the completed spec/app artifacts | WP03 | No |
 
@@ -84,18 +84,18 @@ Prompt: [tasks/WP03-docs-deploy-and-smoke-test.md](tasks/WP03-docs-deploy-and-sm
 Included subtasks:
 
 - [ ] T010 Add deployment samples for systemd and env configuration (WP03)
-- [ ] T011 Add README with boundaries, API examples, storage layout, and Hermes handoff (WP03)
+- [ ] T011 Add professional public README with boundaries, API examples, storage layout, and downstream handoff (WP03)
 - [ ] T012 Run a local background-server curl smoke test and record verified commands in README (WP03)
 - [ ] T013 Inspect git status for secrets and commit the completed spec/app artifacts (WP03)
 
 Implementation sketch:
 
-- Add `deploy/` examples that match the spec's Hermes VM assumptions.
-- Document that the service does not own LLM/email/Telegram/n8n/S3 behavior.
+- Add `deploy/` examples that match the spec's Linux/systemd assumptions.
+- Document that the service does not own LLM/email/Telegram/n8n/S3 behavior using professional public-repository wording.
 - Run a real local service process with a temporary root and verify health/upload/file output.
 
 Parallel opportunities: `T010` and `T011` can be drafted in parallel after WP02.  
-Risks: docs implying broader scope than ingest, systemd sandbox blocking writes, or accidentally committing secrets.
+Risks: docs implying broader scope than ingest, systemd sandbox blocking writes, public docs exposing internal deployment assumptions, or accidentally committing secrets.
 
 ## Requirement Mapping
 
@@ -112,4 +112,4 @@ Before the mission is complete:
 - [ ] local `/health` curl returns JSON 200
 - [ ] local valid upload curl returns JSON 201
 - [ ] smoke upload creates JPEG and `latest.json` under the configured temporary root
-- [ ] git diff/status inspection finds no committed secrets
+- [ ] git diff/status inspection finds no committed secrets, absolute local machine paths, or unprofessional/internal-deployment wording in public-facing files

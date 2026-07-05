@@ -47,6 +47,13 @@ def request(host: str, port: int, method: str, path: str, body: bytes = b"", hea
     return response.status, json.loads(data.decode("utf-8"))
 
 
+def recv_all(sock: socket.socket) -> bytes:
+    chunks: list[bytes] = []
+    while chunk := sock.recv(4096):
+        chunks.append(chunk)
+    return b"".join(chunks)
+
+
 def test_health_returns_json_ok(running_server) -> None:
     host, port, _ = running_server
 
@@ -196,7 +203,7 @@ def test_capture_rejects_missing_content_length(running_server) -> None:
             + b"Connection: close\r\n\r\n"
             + JPEG
         )
-        raw = sock.recv(4096)
+        raw = recv_all(sock)
 
     assert b"411" in raw.split(b"\r\n", 1)[0]
     assert b"length_required" in raw
@@ -215,7 +222,7 @@ def test_capture_rejects_invalid_content_length(running_server) -> None:
             + b"Connection: close\r\n\r\n"
             + JPEG
         )
-        raw = sock.recv(4096)
+        raw = recv_all(sock)
 
     assert b"400" in raw.split(b"\r\n", 1)[0]
     assert b"invalid_content_length" in raw

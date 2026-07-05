@@ -1,10 +1,12 @@
 # meter-cam-ingest
 
-Tiny LAN-only JPEG ingest service for the monthly water-meter camera.
+Small LAN-only JPEG ingest service for a monthly water-meter camera.
 
-This service is intentionally dumb. It accepts a token-authenticated raw JPEG upload, stores the original image under a month directory, and writes `latest.json` metadata for Hermes cron.
+The service has a narrow responsibility: accept a token-authenticated raw JPEG upload, store the original image under a month directory, and write `latest.json` metadata for downstream automation.
 
-It does not:
+## Scope
+
+This service handles capture ingest only. It does not:
 
 - call LLMs
 - read meter values
@@ -15,7 +17,7 @@ It does not:
 - upload to S3/MinIO
 - own approval state
 
-Hermes cron owns the downstream workflow: missing-photo alert, LLM extraction, second-LLM verification, non-decreasing meter checks, email draft, Telegram approval, and email send.
+Downstream automation can consume the stored image and metadata to perform extraction, verification, approval, and submission.
 
 ## Runtime requirements
 
@@ -33,22 +35,14 @@ Environment variables:
 METER_CAM_BIND_HOST=0.0.0.0
 METER_CAM_PORT=8097
 METER_CAM_ROOT=/srv/meter-cam
-METER_CAM_API_KEY=replace-with-camera-upload-token
+METER_CAM_API_KEY=<upload-api-key>
 METER_CAM_TZ=Europe/Warsaw
 METER_CAM_MAX_BYTES=5242880
 METER_CAM_MIN_BYTES=2048
 METER_CAM_ALLOWED_DEVICE_IDS=m5stack-timercam-water
 ```
 
-`METER_CAM_API_KEY` is required. Do not commit the real token.
-
-If this repository is private, deployment automation must have read access. Use one of:
-
-1. public repo with no secrets in source,
-2. read-only GitHub deploy key stored in Semaphore,
-3. fine-scoped GitHub token stored in Semaphore.
-
-Do not place GitHub credentials in committed inventory/default files.
+`METER_CAM_API_KEY` is required for capture uploads. Keep the real value in the deployment environment, not in source control.
 
 ## API
 
@@ -70,7 +64,7 @@ Expected response:
 curl -i \
   -X POST \
   -H "Content-Type: image/jpeg" \
-  -H "X-Api-Key: $METER_CAM_API_KEY" \
+  -H "X-Api-Key: ${METER_CAM_API_KEY}" \
   -H "X-Device-Id: m5stack-timercam-water" \
   --data-binary @tests/fixtures/tiny.jpg \
   http://127.0.0.1:8097/capture/water
@@ -126,13 +120,13 @@ Default root: `/srv/meter-cam`
 
 Multiple uploads in one month are allowed. Each successful upload gets its own immutable JPEG. `latest.json` points to the newest successful upload.
 
-Hermes cron should read:
+Downstream automation should read:
 
 ```text
 /srv/meter-cam/captures/water/<YYYY-MM>/latest.json
 ```
 
-If that file is missing at 09:30 Europe/Warsaw, Hermes should send the Telegram missing-photo alert.
+If that file is missing when the monthly workflow runs, downstream automation should notify the operator that the current-month capture has not arrived.
 
 ## Local development
 
@@ -149,7 +143,7 @@ Run locally:
 export METER_CAM_BIND_HOST=127.0.0.1
 export METER_CAM_PORT=8097
 export METER_CAM_ROOT=/tmp/meter-cam-dev
-export METER_CAM_API_KEY=dev-secret
+export METER_CAM_API_KEY=local-upload-token
 export METER_CAM_TZ=Europe/Warsaw
 export METER_CAM_MAX_BYTES=5242880
 export METER_CAM_MIN_BYTES=10
@@ -164,11 +158,11 @@ curl -s http://127.0.0.1:8097/health
 curl -i \
   -X POST \
   -H "Content-Type: image/jpeg" \
-  -H "X-Api-Key: dev-secret" \
+  -H "X-Api-Key: ${METER_CAM_API_KEY}" \
   -H "X-Device-Id: m5stack-timercam-water" \
   --data-binary @tests/fixtures/tiny.jpg \
   http://127.0.0.1:8097/capture/water
-find /tmp/meter-cam-dev -type f -maxdepth 5
+find /tmp/meter-cam-dev -maxdepth 5 -type f
 ```
 
 ## Production deployment sample
@@ -192,7 +186,7 @@ Recommended service user/group:
 metercam:metercam
 ```
 
-The Hermes runtime user must be able to read `/srv/meter-cam/captures/.../latest.json` and the referenced image. The deployment plan should add the Hermes runtime user, expected initially to be `buggy`, to the `metercam` group.
+The downstream automation user must be able to read `/srv/meter-cam/captures/.../latest.json` and the referenced image. A typical deployment grants read access by adding that user to the `metercam` group.
 
 ## Spec Kitty artifacts
 
@@ -202,4 +196,4 @@ This repo was initialized with Spec Kitty. The ingest-service mission lives unde
 kitty-specs/meter-camera-ingest-service-01KWSKRQ/
 ```
 
-The spec, plan, tasks, work-package prompts, lanes, and acceptance matrix are intended to be committed with the app source.
+The spec, plan, tasks, work-package prompts, lanes, and acceptance matrix are committed with the app source.

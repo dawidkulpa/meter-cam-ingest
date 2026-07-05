@@ -48,7 +48,7 @@ Add deployment samples and operator documentation, then prove the completed serv
 
 ## Context
 
-WP03 is not allowed to expand service scope. It documents deployment and handoff only. The service remains dumb ingest: no LLM, no email, no Telegram, no n8n, no S3.
+WP03 is not allowed to expand service scope. It documents deployment and handoff only. The service remains a narrow-scoped ingest boundary: no LLM, no email, no Telegram, no n8n, no S3.
 
 ## Requirements Covered
 
@@ -84,8 +84,10 @@ Document:
 - storage layout
 - local run command
 - curl upload test
-- Hermes cron handoff expectations
-- private GitHub repo deploy-key/token caveat
+- downstream automation handoff expectations
+- production deployment notes suitable for a public GitHub repository
+
+Do not include repository access credential guidance, personal usernames, absolute local machine paths, informal wording, or redacted/broken command fragments.
 
 ### T012 — Run local smoke test
 
@@ -107,12 +109,13 @@ Before committing:
 ## Definition of Done
 
 - Deploy samples exist and use placeholders only.
-- README captures the ingest-only boundary clearly.
+- README captures the ingest-only boundary clearly with professional public-repository wording.
 - Local curl smoke test has actually run successfully.
 - No secrets are committed.
 
 ## Risks for Reviewer
 
 - Check docs do not imply this service sends email or Telegram.
+- Check docs and committed tool metadata do not contain internal deployment caveats, personal usernames, absolute local machine paths, informal wording, or malformed redacted examples.
 - Check env example does not include real tokens.
 - Check systemd sandbox still allows writes to `/srv/meter-cam`.

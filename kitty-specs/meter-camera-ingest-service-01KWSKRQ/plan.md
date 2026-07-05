@@ -5,7 +5,7 @@
 
 ## Summary
 
-Build a small Python standard-library HTTP service that accepts token-authenticated raw JPEG uploads from the monthly water-meter camera, stores each valid image immutably under a month directory, and atomically updates `latest.json` for Hermes cron to consume. The service owns only capture ingest and durable handoff; Hermes owns all LLM, validation, Telegram, approval, and email workflow.
+Build a small Python standard-library HTTP service that accepts token-authenticated raw JPEG uploads from the monthly water-meter camera, stores each valid image immutably under a month directory, and atomically updates `latest.json` for downstream automation to consume. The service owns only capture ingest and durable handoff; downstream automation owns all LLM, validation, notification, approval, and email workflow.
 
 ## Technical Context
 
@@ -13,7 +13,7 @@ Build a small Python standard-library HTTP service that accepts token-authentica
 **Primary Dependencies**: Python standard library only at runtime (`http.server`, `pathlib`, `json`, `hashlib`, `hmac`, `zoneinfo`, `tempfile`, `os`)  
 **Storage**: Filesystem under configurable root, default `/srv/meter-cam`; no database  
 **Testing**: pytest-based automated tests for storage and HTTP behavior; `python3 -m compileall` for syntax verification; manual local curl smoke test  
-**Target Platform**: Debian/Linux on the Hermes VM, running under systemd as `metercam`  
+**Target Platform**: Debian/Linux host, running under systemd as `metercam`
 **Project Type**: single Python service/package  
 **Performance Goals**: Handle one monthly camera upload plus occasional manual retries; reject bodies above configured max before reading excessive data; respond to local health checks immediately  
 **Constraints**: LAN-only HTTP MVP; token-authenticated capture endpoint; no third-party runtime dependencies; no LLM/email/Telegram/n8n/S3 logic in service; no secret values committed or logged  
@@ -23,7 +23,7 @@ Build a small Python standard-library HTTP service that accepts token-authentica
 
 No project-specific charter exists yet. Apply mission constraints from the spec:
 
-- Keep the ingest boundary deliberately dumb.
+- Keep the ingest boundary narrow and focused on image handoff.
 - Use strict TDD for production code.
 - Prefer simple inspectable file state over a database.
 - Preserve downstream evidence; never overwrite existing image captures.
@@ -73,7 +73,7 @@ pyproject.toml
 
 ## Complexity Tracking
 
-No charter violations. The chosen approach is the simplest viable architecture for the camera-to-Hermes handoff.
+No charter violations. The chosen approach is the simplest viable architecture for the camera-to-downstream-automation handoff.
 
 ## Implementation Concern Map
 
@@ -87,7 +87,7 @@ No charter violations. The chosen approach is the simplest viable architecture f
 
 ### IC-02 — Atomic capture storage
 
-- **Purpose**: Persist valid capture bytes and metadata in a durable month-based layout that Hermes can read safely.
+- **Purpose**: Persist valid capture bytes and metadata in a durable month-based layout that downstream automation can read safely.
 - **Relevant requirements**: FR-006, FR-007, FR-008, FR-009, FR-012, NFR-002
 - **Affected surfaces**: `meter_cam_ingest/storage.py`, `tests/test_storage.py`
 - **Sequencing/depends-on**: IC-01
@@ -103,11 +103,11 @@ No charter violations. The chosen approach is the simplest viable architecture f
 
 ### IC-04 — Deployment and operator handoff
 
-- **Purpose**: Make the service deployable and understandable for the Hermes VM without implementing downstream Hermes workflow.
+- **Purpose**: Make the service deployable and understandable without implementing downstream automation workflow.
 - **Relevant requirements**: FR-013, FR-014, NFR-003
 - **Affected surfaces**: `deploy/meter-cam-ingest.service`, `deploy/meter-cam-ingest.env.example`, `README.md`
 - **Sequencing/depends-on**: IC-03
-- **Risks**: systemd sandbox blocking writes, private GitHub repo clone assumptions, or docs implying the service owns LLM/email approval logic.
+- **Risks**: systemd sandbox blocking writes, public documentation exposing internal deployment assumptions, or docs implying the service owns LLM/email approval logic.
 
 ## Implementation Strategy
 
@@ -128,7 +128,7 @@ python3 -m compileall meter_cam_ingest
 pytest -q
 python3 -m meter_cam_ingest.server  # in background with test env for smoke only
 curl -s http://127.0.0.1:<port>/health
-curl -i -X POST -H 'Content-Type: image/jpeg' -H 'X-Api-Key: ...' -H 'X-Device-Id: m5stack-timercam-water' --data-binary @tests/fixtures/tiny.jpg http://127.0.0.1:<port>/capture/water
+curl -i -X POST -H 'Content-Type: image/jpeg' -H "X-Api-Key: ${METER_CAM_API_KEY}" -H 'X-Device-Id: m5stack-timercam-water' --data-binary @tests/fixtures/tiny.jpg http://127.0.0.1:<port>/capture/water
 ```
 
 Smoke test must prove `latest.json` and the uploaded JPEG exist under the configured temporary storage root.

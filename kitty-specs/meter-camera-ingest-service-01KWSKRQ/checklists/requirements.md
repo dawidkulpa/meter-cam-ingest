@@ -31,8 +31,8 @@
 - [x] All functional requirements have clear acceptance criteria
 - [x] User scenarios cover primary flows
 - [x] Feature meets measurable outcomes defined in Success Criteria
-- [x] Downstream Hermes handoff is documented without moving workflow logic into ingest
+- [x] Downstream automation handoff is documented without moving workflow logic into ingest
 
 ## Notes
 
-The spec intentionally includes technical API/storage details because this project is a small infrastructure ingest service whose user value is the exact machine-readable handoff contract for the camera and Hermes cron.
+The spec intentionally includes technical API/storage details because this project is a small infrastructure ingest service whose user value is the exact machine-readable handoff contract for the camera and downstream automation.

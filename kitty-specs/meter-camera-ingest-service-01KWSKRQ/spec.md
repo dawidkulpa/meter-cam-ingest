@@ -8,17 +8,17 @@
 
 ## Summary
 
-Build a deliberately small LAN-only image ingest service for a monthly water-meter camera. The service accepts a token-authenticated raw JPEG upload from the camera, stores the original image durably under `/srv/meter-cam`, writes metadata for the newest successful upload, and exposes a health endpoint.
+Build a small, narrow-scoped LAN-only image ingest service for a monthly water-meter camera. The service accepts a token-authenticated raw JPEG upload from the camera, stores the original image durably under `/srv/meter-cam`, writes metadata for the newest successful upload, and exposes a health endpoint.
 
-The service is only the capture handoff boundary. Hermes cron performs every workflow/business step after ingest: missing-photo Telegram alerts, LLM extraction, second-LLM verification, non-decreasing reading checks, email draft creation, Telegram approval, and email sending.
+The service is only the capture handoff boundary. Downstream automation performs every workflow/business step after ingest: missing-photo alerts, LLM extraction, second-LLM verification, non-decreasing reading checks, email draft creation, approval, and email sending.
 
 ## Goals
 
 - Provide a stable HTTP target for an ESPHome/M5Stack camera to upload one monthly JPEG.
 - Persist every valid upload immutably, allowing retries without losing evidence.
-- Maintain a simple `latest.json` pointer for Hermes cron to consume.
+- Maintain a simple `latest.json` pointer for downstream automation to consume.
 - Avoid operational weight: no database, no queue, no object storage, no web framework runtime dependency.
-- Make deployment easy as a systemd service on the Hermes VM.
+- Make deployment easy as a systemd service on a Linux host.
 - Keep all specs and implementation artifacts in the app repository.
 
 ## Non-Goals
@@ -32,7 +32,7 @@ The service is only the capture handoff boundary. Hermes cron performs every wor
 - Do not own approval state.
 - Do not expose a public internet API for MVP.
 - Do not modify ESPHome YAML in this mission.
-- Do not create the Hermes cron workflow in this mission.
+- Do not create the downstream scheduled workflow in this mission.
 
 ## Context and Decisions
 
@@ -58,9 +58,9 @@ Rejected MVP alternatives:
 ## Actors
 
 - **Camera device**: ESPHome/M5Stack-style camera posting JPEG bytes.
-- **Ingest service**: this app, running as `metercam` on the Hermes VM.
-- **Hermes cron**: downstream reader of stored files and metadata.
-- **Operator**: Dawid, who deploys/configures the service and receives later Telegram approvals.
+- **Ingest service**: this app, running as `metercam` on the deployment host.
+- **Downstream automation**: scheduled reader of stored files and metadata.
+- **Operator**: person who deploys/configures the service and handles later approval steps.
 
 ## Functional Requirements
 
@@ -77,9 +77,9 @@ Rejected MVP alternatives:
 | FR-009 | Timezone-aware month calculation | Month keys are computed in the configured timezone, defaulting to Europe/Warsaw. | High | Accepted |
 | FR-010 | Environment configuration | Runtime host, port, storage root, API key, timezone, size limits, and allowed devices are configured from environment variables. | High | Accepted |
 | FR-011 | JSON response contract | Every success and error response is JSON with stable fields for automation and debugging. | Medium | Accepted |
-| FR-012 | Hermes handoff metadata | The latest metadata file contains the image path and enough upload facts for Hermes cron to process the current month. | High | Accepted |
-| FR-013 | Deployment samples | The repo includes systemd and environment examples suitable for the Hermes VM deployment. | Medium | Accepted |
-| FR-014 | Operator documentation | The README documents boundaries, configuration, local usage, API examples, storage, and downstream handoff. | Medium | Accepted |
+| FR-012 | Handoff metadata | The latest metadata file contains the image path and enough upload facts for downstream automation to process the current month. | High | Accepted |
+| FR-013 | Deployment samples | The repo includes systemd and environment examples suitable for Linux deployment. | Medium | Accepted |
+| FR-014 | Public operator documentation | The README documents boundaries, configuration, local usage, API examples, storage, and downstream handoff in a professional form suitable for a public GitHub repository. | Medium | Accepted |
 
 ### FR-001 Health endpoint
 
@@ -102,7 +102,7 @@ Required headers:
 
 ```text
 Content-Type: image/jpeg
-X-Api-Key: <configured API key>
+X-Api-Key: <upload-api-key>
 X-Device-Id: m5stack-timercam-water
 ```
 
@@ -235,7 +235,7 @@ Messages MUST NOT include secrets.
 
 ### FR-012 Downstream handoff contract
 
-Hermes cron consumes:
+Downstream automation consumes:
 
 ```text
 /srv/meter-cam/captures/water/<YYYY-MM>/latest.json
@@ -267,7 +267,7 @@ The repository MUST include deployment sample files:
 
 The systemd sample MUST run as `metercam`, set `PYTHONDONTWRITEBYTECODE=1`, use `/etc/meter-cam-ingest.env`, and restrict writes to `/srv/meter-cam`.
 
-### FR-014 Documentation
+### FR-014 Public operator documentation
 
 The repository MUST include a README documenting:
 
@@ -277,8 +277,15 @@ The repository MUST include a README documenting:
 - API examples
 - storage layout
 - curl upload test
-- Hermes cron handoff expectations
-- deployment notes and private-repo deploy-key/token caveat
+- downstream automation handoff expectations
+- deployment notes
+
+The README and deployment examples MUST be suitable for a public GitHub repository:
+
+- no real credentials, hostnames, personal usernames, or internal deployment assumptions
+- no repository access credential guidance for this public project
+- no informal wording in public-facing documentation
+- examples must use clear placeholders or environment-variable references rather than redacted or malformed command fragments
 
 ## Non-Functional Requirements
 
@@ -301,6 +308,7 @@ The MVP is LAN-only token-authenticated HTTP.
 - Do not expose publicly for MVP.
 - Do not log secrets.
 - Do not commit secrets.
+- Keep public documentation and committed tool metadata free of real credentials, personal usernames, absolute local machine paths, repository access credential guidance, and malformed redacted examples.
 - If public exposure is added later, require TLS/reverse proxy and revisit auth/rate-limiting.
 
 ### NFR-004 Observability
@@ -341,7 +349,7 @@ The service SHOULD run on Debian/Linux with Python 3.11+.
 - Invalid token/content/device/body cases return the specified error statuses and JSON bodies.
 - Duplicate rapid uploads do not overwrite an existing image.
 - No committed file contains an upload API key or GitHub token.
-- README and deploy samples are present.
+- README and deploy samples are present, professional, public-repository-safe, and contain only placeholders for credentials.
 - Spec Kitty artifacts are committed with the app source.
 
 ## Out-of-Scope Downstream State
@@ -365,8 +373,7 @@ Initial downstream baseline, to be seeded by deployment/Hermes workflow if neede
 
 ## Open Questions for Deployment, Not Implementation
 
-- Whether the eventual GitHub app repository is public or private with deploy key/token.
-- Exact Hermes VM inventory host/group in `ansible-configs`.
-- Exact Hermes cron runtime user; default assumption is `buggy`.
+- Exact deployment inventory host/group.
+- Exact downstream automation runtime user/group that needs read access to stored captures.
 - Whether port `8097` is acceptable in production.
 - Whether firewall allowlist is added in the first deployment or deferred.
