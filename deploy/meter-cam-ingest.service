@@ -1,0 +1,25 @@
+[Unit]
+Description=Meter Camera Ingest Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=metercam
+Group=metercam
+EnvironmentFile=/etc/meter-cam-ingest.env
+Environment=PYTHONDONTWRITEBYTECODE=1
+WorkingDirectory=/opt/meter-cam-ingest
+ExecStart=/usr/bin/python3 -m meter_cam_ingest.server
+Restart=on-failure
+RestartSec=5
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/meter-cam
+ReadOnlyPaths=/opt/meter-cam-ingest
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "mission_slug": "meter-camera-ingest-service-01KWSKRQ",
+  "mission_id": "01KWSKRQMBV1D5W040QQ8XBN99",
+  "mission_branch": "kitty/mission-meter-camera-ingest-service-01KWSKRQ",
+  "target_branch": "main",
+  "lanes": [
+    {
+      "lane_id": "lane-a",
+      "wp_ids": [
+        "WP01"
+      ],
+      "write_scope": [
+        "meter_cam_ingest/__init__.py",
+        "meter_cam_ingest/storage.py",
+        "pyproject.toml",
+        "tests/fixtures/tiny.jpg",
+        "tests/test_storage.py"
+      ],
+      "predicted_surfaces": [
+        "api"
+      ],
+      "depends_on_lanes": [],
+      "parallel_group": 0
+    },
+    {
+      "lane_id": "lane-b",
+      "wp_ids": [
+        "WP02"
+      ],
+      "write_scope": [
+        "meter_cam_ingest/server.py",
+        "tests/test_server.py"
+      ],
+      "predicted_surfaces": [
+        "api",
+        "tests"
+      ],
+      "depends_on_lanes": [
+        "lane-a"
+      ],
+      "parallel_group": 1
+    },
+    {
+      "lane_id": "lane-c",
+      "wp_ids": [
+        "WP03"
+      ],
+      "write_scope": [
+        "README.md",
+        "deploy/meter-cam-ingest.env.example",
+        "deploy/meter-cam-ingest.service"
+      ],
+      "predicted_surfaces": [
+        "api",
+        "app-shell",
+        "artifact-rendering"
+      ],
+      "depends_on_lanes": [
+        "lane-b"
+      ],
+      "parallel_group": 2
+    }
+  ],
+  "computed_at": "2026-07-05T17:11:27.744272+00:00",
+  "computed_from": "dependency_graph+ownership",
+  "planning_artifact_wps": []
+}
