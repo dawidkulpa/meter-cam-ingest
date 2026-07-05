@@ -1,0 +1,1 @@
+/home/buggy/.agents/skills/spk-team-auth/SKILL.md

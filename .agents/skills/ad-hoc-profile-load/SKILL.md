@@ -1,0 +1,1 @@
+/home/buggy/.agents/skills/ad-hoc-profile-load/SKILL.md

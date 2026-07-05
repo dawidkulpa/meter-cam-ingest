@@ -1,0 +1,1 @@
+/home/buggy/.agents/skills/spk-doctrine-glossary/SKILL.md

@@ -1,0 +1,1 @@
+/home/buggy/.agents/skills/spec-kitty-setup-doctor/references/agent-path-matrix.md

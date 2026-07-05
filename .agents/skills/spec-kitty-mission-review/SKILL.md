@@ -1,0 +1,1 @@
+/home/buggy/.agents/skills/spec-kitty-mission-review/SKILL.md

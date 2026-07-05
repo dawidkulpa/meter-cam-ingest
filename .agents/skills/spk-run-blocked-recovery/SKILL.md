@@ -1,0 +1,1 @@
+/home/buggy/.agents/skills/spk-run-blocked-recovery/SKILL.md

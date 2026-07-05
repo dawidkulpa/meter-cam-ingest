@@ -1,0 +1,1 @@
+/home/buggy/.agents/skills/spk-admin-dashboard/references/dashboard-daemon.md

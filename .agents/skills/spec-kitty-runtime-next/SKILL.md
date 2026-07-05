@@ -1,0 +1,1 @@
+/home/buggy/.agents/skills/spec-kitty-runtime-next/SKILL.md

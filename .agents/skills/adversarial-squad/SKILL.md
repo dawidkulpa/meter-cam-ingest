@@ -1,0 +1,1 @@
+/home/buggy/.agents/skills/adversarial-squad/SKILL.md

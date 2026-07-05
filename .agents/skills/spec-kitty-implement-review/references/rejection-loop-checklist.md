@@ -1,0 +1,1 @@
+/home/buggy/.agents/skills/spec-kitty-implement-review/references/rejection-loop-checklist.md

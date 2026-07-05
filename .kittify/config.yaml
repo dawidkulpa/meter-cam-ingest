@@ -1,0 +1,12 @@
+project:
+  uuid: a90a9559-2a1b-4c26-ac6e-057cd44c8980
+  slug: meter-cam-ingest
+  node_id: 84219d346661
+  build_id: e6bae73e-69d9-458a-9d27-fb13b884b0ea
+vcs:
+  type: git
+agents:
+  available:
+  - codex
+  auto_commit: true
+  lint_on_edit: false

@@ -1,0 +1,1 @@
+/home/buggy/.agents/skills/spec-kitty-glossary-context/SKILL.md

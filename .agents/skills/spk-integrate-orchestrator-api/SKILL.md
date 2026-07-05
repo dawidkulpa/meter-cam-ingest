@@ -1,0 +1,1 @@
+/home/buggy/.agents/skills/spk-integrate-orchestrator-api/SKILL.md

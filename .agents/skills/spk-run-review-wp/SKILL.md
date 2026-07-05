@@ -1,0 +1,1 @@
+/home/buggy/.agents/skills/spk-run-review-wp/SKILL.md

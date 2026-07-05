@@ -1,0 +1,1 @@
+/home/buggy/.agents/skills/spk-gate-merge/SKILL.md

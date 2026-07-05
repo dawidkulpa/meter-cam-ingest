@@ -1,0 +1,1 @@
+/home/buggy/.agents/skills/spk-admin-git-workflow/SKILL.md

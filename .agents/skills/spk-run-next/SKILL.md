@@ -1,0 +1,1 @@
+/home/buggy/.agents/skills/spk-run-next/SKILL.md

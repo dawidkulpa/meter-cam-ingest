@@ -1,0 +1,1 @@
+/home/buggy/.agents/skills/spk-mission-plan/SKILL.md
